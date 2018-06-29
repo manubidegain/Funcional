@@ -33,8 +33,8 @@ a los módulos necesarios.
 data TablutPlayer = ShieldPlayer | SwordPlayer deriving (Eq, Show)
 data Square = Sword | Shield | King | Empty  deriving (Eq)
 data Board = Board [[Square]] deriving (Eq)
-data TablutGame = TablutGame Board TablutPlayer TablutPlayer deriving (Eq,Show)
-data TablutAction = TablutAction [Board] deriving (Eq, Show)
+data TablutGame = TablutGame Board TablutPlayer TablutPlayer deriving (Eq)
+data TablutAction = TablutAction Board deriving (Eq, Show)
 
 instance Show Square where
     show Sword = "T"
@@ -42,11 +42,19 @@ instance Show Square where
     show King = "$"
     show Empty = " "
 
+
+
+
 instance Show Board where
     show (Board [x]) = (returnRow x)
     show (Board (x:xs)) =(returnRow x) ++ "\n" ++ show (Board xs)  
 
+instance Show TablutGame where
+    show (TablutGame a b c) = " A B C D E F G H I\n" ++ show a ++ "\n \nCurrent: " ++ show b
 
+
+returnRow :: [Square] -> String
+returnRow x = foldl(\a b -> a++show b++"|") "|" x
 
 beginning :: TablutGame
 beginning = TablutGame (Board (map (\str -> map func str) board)) ShieldPlayer SwordPlayer
@@ -58,25 +66,31 @@ beginning = TablutGame (Board (map (\str -> map func str) board)) ShieldPlayer S
    board = ["AAABBBAAA", "AAAABAAAA", "AAAACAAAA", "BAAACAAAB", "BBCCDCCBB", "BAAACAAAB", "AAAACAAAA", "AAAABAAAA","AAABBBAAA"]
 
 actions :: TablutGame -> [(TablutPlayer, [TablutAction])]
-actions _ = [(ShieldPlayer, [TablutAction]), (SwordPlayer, [])] --TODO
+actions (TablutGame (Board x) p1 p2) = foldl (\a b-> ) [] 
+actions _ = [(ShieldPlayer, [TablutAction (Board [[]])]), (SwordPlayer, [])] 
 
-next :: TablutGame -> (TablutPlayer, TablutAction) -> TablutGame
-next _ _ = TablutGame True --TODO
+isMyPiece :: Square -> TablutPlayer -> Bool
+isMyPiece a SwordPlayer = a == Sword
+isMyPiece a ShieldPlayer = a == Shield || a == King
+-- next :: TablutGame -> (TablutPlayer, TablutAction) -> TablutGame
+-- next _ _ = TablutGame True --TODO
 
-result :: TablutGame -> [(TablutPlayer, Int)]
-result (TablutGame f) = if f then [(ShieldPlayer, 1), (SwordPlayer, (-1))] else [] --TODO
+-- result :: TablutGame -> [(TablutPlayer, Int)]
+-- result (TablutGame f) = if f then [(ShieldPlayer, 1), (SwordPlayer, (-1))] else [] --TODO
 
 showBoard :: TablutGame -> String
 showBoard g = show g
 
-showAction :: TablutAction -> String
-showAction a = show a --TODO
-   
-readAction :: String -> TablutAction
-readAction = read --TODO
 
-activePlayer :: TablutGame -> Maybe TablutPlayer
-activePlayer g = listToMaybe [p | (p, as) <- actions g, not (null as)]
+
+-- showAction :: TablutAction -> String
+-- showAction a = show a --TODO
+   
+-- readAction :: String -> TablutAction
+-- readAction = read --TODO
+
+-- activePlayer :: TablutGame -> Maybe TablutPlayer
+-- activePlayer g = listToMaybe [p | (p, as) <- actions g, not (null as)]
 
 {-- Match controller -------------------------------------------------------------------------------
 
@@ -88,47 +102,47 @@ type TablutAgent = TablutGame -> IO (Maybe TablutAction)
 {- La función ´runMatch´ corre la partida completa a partir del estado de juego dado, usando los dos 
 agentes dados. Retorna una tupla con los puntajes (score) finales del juego.
 -}
-runMatch :: (TablutAgent, TablutAgent) -> TablutGame -> IO [(TablutPlayer, Int)]
-runMatch ags@(ag1, ag2) g = do
-   putStrLn (showBoard g)
-   case (activePlayer g) of
-      Nothing -> return $ result g
-      Just p -> do
-         let ag = [ag1, ag2] !! (fromJust $ elemIndex p [ShieldPlayer, SwordPlayer])
-         move <- ag g
-         runMatch ags (Tablut.next g (p, fromJust move))
+-- runMatch :: (TablutAgent, TablutAgent) -> TablutGame -> IO [(TablutPlayer, Int)]
+-- runMatch ags@(ag1, ag2) g = do
+--    putStrLn (showBoard g)
+--    case (activePlayer g) of
+--       Nothing -> return $ result g
+--       Just p -> do
+--          let ag = [ag1, ag2] !! (fromJust $ elemIndex p [ShieldPlayer, SwordPlayer])
+--          move <- ag g
+--          runMatch ags (Tablut.next g (p, fromJust move))
 
 {- La función ´runOnConsole´ ejecuta toda la partida a partir del estado inicial usando dos agentes
 de consola.
 -}
-runOnConsole :: IO [(TablutPlayer, Int)]
-runOnConsole = do
-   runMatch (consoleAgent ShieldPlayer, consoleAgent SwordPlayer) beginning
+-- runOnConsole :: IO [(TablutPlayer, Int)]
+-- runOnConsole = do
+--    runMatch (consoleAgent ShieldPlayer, consoleAgent SwordPlayer) beginning
 
 {- El agente de consola ´consoleAgent´ muestra el estado de juego y los movimientos disponibles por
 consola, y espera una acción por entrada de texto.
 -}
-consoleAgent :: TablutPlayer -> TablutAgent
-consoleAgent player state = do
-   let moves = fromJust $ lookup player (actions state)
-   if null moves then do
-      putStrLn "No moves!"
-      getLine
-      return Nothing
-   else do
-      putStrLn ("Select one move:" ++ concat [" "++ show m | m <- moves])
-      line <- getLine
-      let input = readAction line
-      if elem input moves then return (Just input) else do 
-         putStrLn "Invalid move!"
-         consoleAgent player state
+-- consoleAgent :: TablutPlayer -> TablutAgent
+-- consoleAgent player state = do
+--    let moves = fromJust $ lookup player (actions state)
+--    if null moves then do
+--       putStrLn "No moves!"
+--       getLine
+--       return Nothing
+--    else do
+--       putStrLn ("Select one move:" ++ concat [" "++ show m | m <- moves])
+--       line <- getLine
+--       let input = readAction line
+--       if elem input moves then return (Just input) else do 
+--          putStrLn "Invalid move!"
+--          consoleAgent player state
 
-randomAgent :: TablutPlayer -> TablutAgent
-randomAgent player state = do
-    let moves = fromJust $ lookup player (actions state)
-    if null moves then do
-       putStrLn "No moves!"
-       return Nothing
-    else do
-       i <- randomRIO (0, (length moves) - 1)
-       return (Just (moves !! i))
+-- randomAgent :: TablutPlayer -> TablutAgent
+-- randomAgent player state = do
+--     let moves = fromJust $ lookup player (actions state)
+--     if null moves then do
+--        putStrLn "No moves!"
+--        return Nothing
+--     else do
+--        i <- randomRIO (0, (length moves) - 1)
+--        return (Just (moves !! i))
