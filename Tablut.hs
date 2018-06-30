@@ -65,9 +65,12 @@ beginning = TablutGame (Board (map (\str -> map func str) board)) ShieldPlayer S
    func 'D' = King
    board = ["AAABBBAAA", "AAAABAAAA", "AAAACAAAA", "BAAACAAAB", "BBCCDCCBB", "BAAACAAAB", "AAAACAAAA", "AAAABAAAA","AAABBBAAA"]
 
--- actions :: TablutGame -> [(TablutPlayer, [TablutAction])]
--- actions (TablutGame (Board x) p1 p2) = error "Metodo no implementado" 
--- actions _ = [(ShieldPlayer, [TablutAction (Board [[]])]), (SwordPlayer, [])] 
+actions :: TablutGame -> [(TablutPlayer, [TablutAction])]
+actions (TablutGame (Board x) p1 p2) = error "Metodo no implementado" 
+actions _ = [(ShieldPlayer, [TablutAction (Board [[]])]), (SwordPlayer, [])] 
+
+whatsThere :: Board -> (Int, Int) -> Square
+whatsThere  b (x, y) = (b !! y) !! x
 
 isMyPiece :: Square -> TablutPlayer -> Bool
 isMyPiece a SwordPlayer = a == Sword
