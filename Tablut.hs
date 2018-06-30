@@ -34,7 +34,7 @@ data TablutPlayer = ShieldPlayer | SwordPlayer deriving (Eq, Show)
 data Square = Sword | Shield | King | Empty  deriving (Eq)
 data Board = Board [[Square]] deriving (Eq)
 data TablutGame = TablutGame Board TablutPlayer TablutPlayer deriving (Eq)
-data TablutAction = TablutAction Board deriving (Eq, Show)
+data TablutAction =TablutAction (Int,Int) (Int,Int) deriving (Eq, Show)
 
 instance Show Square where
     show Sword = "T"
@@ -65,15 +65,31 @@ beginning = TablutGame (Board (map (\str -> map func str) board)) ShieldPlayer S
    func 'D' = King
    board = ["AAABBBAAA", "AAAABAAAA", "AAAACAAAA", "BAAACAAAB", "BBCCDCCBB", "BAAACAAAB", "AAAACAAAA", "AAAABAAAA","AAABBBAAA"]
 
-actions :: TablutGame -> [(TablutPlayer, [TablutAction])]
-actions (TablutGame (Board x) p1 p2) = foldl (\a b-> ) [] 
-actions _ = [(ShieldPlayer, [TablutAction (Board [[]])]), (SwordPlayer, [])] 
+-- actions :: TablutGame -> [(TablutPlayer, [TablutAction])]
+-- actions (TablutGame (Board x) p1 p2) = error "Metodo no implementado" 
+-- actions _ = [(ShieldPlayer, [TablutAction (Board [[]])]), (SwordPlayer, [])] 
 
 isMyPiece :: Square -> TablutPlayer -> Bool
 isMyPiece a SwordPlayer = a == Sword
 isMyPiece a ShieldPlayer = a == Shield || a == King
+
+whatsThere :: Board -> (Int, Int) -> Square
+whatsThere (Board b) (x, y) = (b !! y) !! x
+
+notEmpty :: Board -> (Int,Int) -> Bool
+notEmpty (Board b) (x, y) = whatsThere (Board b) (x, y) /= Empty
+
+gameToBoard :: TablutGame -> Board
+gameToBoard (TablutGame brd _ _)= brd
+
+boardToCoords :: Board -> [(Int,Int)]
+boardToCoords (Board x) = filter (notEmpty (Board x)) coords
+    where
+    coords = foldl (\a b -> a++(zip (replicate 9 b) [0..8])) [] [0..8]
+
 -- next :: TablutGame -> (TablutPlayer, TablutAction) -> TablutGame
--- next _ _ = TablutGame True --TODO
+-- next game (player,(action (w,x) (y,z))) = TablutGame (Board (map())
+-- next _ _ = beginning
 
 -- result :: TablutGame -> [(TablutPlayer, Int)]
 -- result (TablutGame f) = if f then [(ShieldPlayer, 1), (SwordPlayer, (-1))] else [] --TODO
